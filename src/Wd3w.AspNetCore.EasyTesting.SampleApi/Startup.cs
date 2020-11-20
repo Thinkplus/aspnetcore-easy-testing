@@ -1,12 +1,13 @@
+using System.Text;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 using Wd3w.AspNetCore.EasyTesting.SampleApi.Entities;
 using Wd3w.AspNetCore.EasyTesting.SampleApi.Services;
-using Wd3w.TokenAuthentication;
 
 namespace Wd3w.AspNetCore.EasyTesting.SampleApi
 {
@@ -25,11 +26,29 @@ namespace Wd3w.AspNetCore.EasyTesting.SampleApi
                 .Options);
             
             services.AddAuthentication("Bearer")
-                .AddTokenAuthenticationScheme<CustomTokenAuthService>("Bearer", new TokenAuthenticationConfiguration
+                .AddJwtBearer(options =>
                 {
-                    Realm = "https://www.test.com/sign-in",
-                    TokenLength = 20
-                });
+                    options.SaveToken = false;
+                    options.ClaimsIssuer = "http://localhost";
+                    options.IncludeErrorDetails = true;
+                    options.Audience = "http://localhost";
+                    options.RequireHttpsMetadata = false;
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidIssuer = "http://localhost",
+                        ValidAudience = "http://localhost",
+                        ValidateAudience = true,
+                        ValidateIssuer = true,
+                        ValidateLifetime = false,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes("ABCDABCDABCDABCDABCDABCDABCDABCD")),
+                    };
+                })
+                // .AddTokenAuthenticationScheme<CustomTokenAuthService>("Bearer", new TokenAuthenticationConfiguration
+                // {
+                //     Realm = "https://www.test.com/sign-in",
+                //     TokenLength = 20
+                // })
+                ;
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

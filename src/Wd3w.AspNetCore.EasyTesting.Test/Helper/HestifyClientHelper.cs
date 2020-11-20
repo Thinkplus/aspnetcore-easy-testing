@@ -1,5 +1,10 @@
-﻿using System.Net;
+﻿using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.Net;
+using System.Text;
 using Hestify;
+using Microsoft.IdentityModel.Logging;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Wd3w.AspNetCore.EasyTesting.Test.Helper
 {
@@ -12,7 +17,15 @@ namespace Wd3w.AspNetCore.EasyTesting.Test.Helper
 
         public static HestifyClient WithFakeBearerToken(this HestifyClient client)
         {
-            return client.WithBearerToken("01234567890123456789");
+            IdentityModelEventSource.ShowPII = true;
+            var token = new JwtSecurityTokenHandler().WriteToken(new JwtSecurityToken(
+                "http://localhost", 
+                "http://localhost",
+                expires: DateTime.Now.AddDays(1),
+                signingCredentials: new SigningCredentials(new SymmetricSecurityKey(Encoding.ASCII.GetBytes("ABCDABCDABCDABCDABCDABCDABCDABCD")), 
+                    SecurityAlgorithms.HmacSha256)));
+
+            return client.WithBearerToken(token);
         }
     }
 }
